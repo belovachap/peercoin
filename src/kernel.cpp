@@ -596,10 +596,19 @@ bool CheckProofOfStake(CValidationState &state, CBlockIndex* pindexPrev, const C
 // Check whether the coinstake timestamp meets protocol
 bool CheckCoinStakeTimestamp(int64_t nTimeBlock, int64_t nTimeTx)
 {
-    if (IsProtocolV03(nTimeTx))  // v0.3 protocol
-        return (nTimeBlock == nTimeTx);
-    else // v0.2 protocol
-        return ((nTimeTx <= nTimeBlock) && (nTimeBlock <= nTimeTx + (IsProtocolV09(nTimeBlock) ? MAX_FUTURE_BLOCK_TIME : MAX_FUTURE_BLOCK_TIME_PREV9)));
+    if (nTimeTx > nTimeBlock) {
+        return false;
+    }
+
+    if (IsProtocolV09(nTimeTx)) {
+        return nTimeBlock <= nTimeTx + MAX_FUTURE_BLOCK_TIME;
+    }
+    else if (IsProtocolV03(nTimeTx)) {
+        return nTimeBlock == nTimeTx;
+    }
+    else { // Protocol v0.2
+        return nTimeBlock <= nTimeTx + MAX_FUTURE_BLOCK_TIME_PREV9;
+    }
 }
 
 // Get stake modifier checksum
